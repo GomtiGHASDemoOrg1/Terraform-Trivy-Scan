@@ -16,6 +16,32 @@ Installation options: https://aquasecurity.github.io/trivy/latest/getting-starte
 
 Below are some of the commands that can be used through the Trivy CLI.
 
+### GIT Repository Scans
+
+You can scan any remote 
+```
+trivy repo <repo-name>
+trivy repo https://github.com/Aristat/golang-example-app
+```
+
+Pass a --branch argument with a valid branch name on the remote repository provided:
+```
+trivy repo --branch <branch-name> <repo-name>
+trivy repo --branch gin-example https://github.com/Aristat/golang-example-app
+```
+
+Pass a --commit argument with a valid commit hash on the remote repository provided:
+```
+trivy repo --commit <commit-hash> <repo-name>
+trivy repo --commit f7be6c387f0e9f2e05e4a3e631b0186014b463c9 https://github.com/Aristat/golang-example-app
+```
+
+Pass a --tag argument with a valid tag on the remote repository provided:
+```
+trivy repo --tag <tag-name> <repo-name>
+trivy repo --tag v0.0.6 https://github.com/Aristat/golang-example-app
+```
+
 ### Vulnerability Scans
 
 [**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/vulnerability/scanning/)
@@ -86,6 +112,58 @@ cat custom-policies/combine-yaml.rego
 The following command will run the scan:
 ```
 trivy conf --severity CRITICAL --policy ./custom-policies/combine-yaml.rego --namespaces user ./manifests
+```
+
+### Trivy Cloud | Trivy AWS
+
+See all the options to scan your AWS services by running the following command:
+```
+trivy aws --help 
+```
+
+Perform an account wide scan:
+```
+trivy aws  
+```
+
+The cache is naturally saved for 24h. This makes scanning your resources again or looking in detail at specific services much quicker:
+```
+trivy aws --update-cache 
+```
+
+Alternatively, you can also specify a max-cache age:
+```
+trivy aws --max-cache-age 12h 
+```
+
+By default, Trivy will either connect with your configured default region or by the region in your ENV variable. However, you can also scan any other region with the 
+```
+trivy aws --region eu-central-1
+```
+
+Alternatively to scnaning your entire cluster or once you have scanned your entire cluster, you can also look at specific services:
+```
+trivy aws --region eu-central-1 --service ec2 
+```
+
+Next, you can look at a specific service by specifying the arn:
+```
+trivy aws --region eu-central-1 --service ec2 --arn arn:aws:ec2:eu-central-1:XXXXXXXXXXXX:vpc/vpc-00ce30b51ebebb314 
+```
+
+OR by specifying the `--format` should be json:
+```
+trivy aws --region eu-central-1 --format json --service ec2 
+```
+
+Jless is a great tool to view the output better:
+```
+trivy aws --region eu-central-1 --format json --service ec2 | jless 
+```
+
+You can also scan myltiple different services at once:
+```
+trivy aws --region us-east-1 --service s3 --service ec2
 ```
 
 ### Scan your connected Kubernetes cluster
@@ -174,7 +252,7 @@ trivy image --severity HIGH node:14
 For more information watch the following tutorials:
 
 1. [Generate SBOMs with Trivy & Scan SBOMs for vulnerabilities](https://youtu.be/Kibk6qq7ZCs)
-2. TBD
+2. [Creating an SBOM Attestation with Trivy and Cosign from Sigstore](https://youtu.be/nF15vzo5Gts)
 
 Trivy can generate SBOMs in the following three formats SPDX, SPDX-json, and CycloneDX.
 
