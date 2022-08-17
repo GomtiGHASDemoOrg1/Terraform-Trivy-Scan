@@ -17,6 +17,7 @@ Installation options: https://aquasecurity.github.io/trivy/latest/getting-starte
 Below are some of the commands that can be used through the Trivy CLI.
 
 ### GIT Repository Scans
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/vulnerability/scanning/git-repository/)
 
 You can scan any remote 
 ```
@@ -115,6 +116,7 @@ trivy conf --severity CRITICAL --policy ./custom-policies/combine-yaml.rego --na
 ```
 
 ### Trivy Cloud | Trivy AWS
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/cloud/aws/scanning/)
 
 See all the options to scan your AWS services by running the following command:
 ```
