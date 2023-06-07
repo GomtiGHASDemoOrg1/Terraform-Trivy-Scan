@@ -292,3 +292,8 @@ Following the example again:
 ```
 cosign attest --key /path/to/cosign.pub --type spdx --predicate sbom.spdx <IMAGE> 
 ```
+
+
+## Ignore Values
+
+trivy fs --security-checks config --ignore-policy ./custom-policies/ignore/basic-two.rego ./bad_iac
