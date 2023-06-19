@@ -1,6 +1,10 @@
-./terraform/*
-!./terraform/main.tf
-!./terraform/provider.tf
+*/terraform/*
+!*terraform/main.tf
+!*/terraform/provider.tf
+!*/terraform/cluster.tf
+!*/terraform/variables.tf
+!*/terraform/outputs.tf
+!*/terraform/terraform.tfvars
 
 
 *.dll
@@ -12,3 +16,5 @@
 # Testing
 *.test
 *.tmp
+
+$HOME

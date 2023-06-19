@@ -8,7 +8,7 @@ This repository provides several examples, showcasing Trivy. Trivy is an open so
 - Slack Channel: https://slack.aquasec.com
 
 ### Presentations
-- Container Security on AKS with AquaSecurity OSS: https://youtu.be/a6iUUWqJDg0?t=297
+- You can find the presentation for this repository here:
 
 ## Trivy CLI
 
@@ -22,26 +22,32 @@ Below are some of the commands that can be used through the Trivy CLI.
 You can scan any remote 
 ```
 trivy repo <repo-name>
-trivy repo https://github.com/Aristat/golang-example-app
+trivy repo https://github.com/Cloud-Native-Security/website
 ```
 
 Pass a --branch argument with a valid branch name on the remote repository provided:
 ```
 trivy repo --branch <branch-name> <repo-name>
-trivy repo --branch gin-example https://github.com/Aristat/golang-example-app
-```
-
-Pass a --commit argument with a valid commit hash on the remote repository provided:
-```
-trivy repo --commit <commit-hash> <repo-name>
-trivy repo --commit f7be6c387f0e9f2e05e4a3e631b0186014b463c9 https://github.com/Aristat/golang-example-app
+trivy repo --branch example https://github.com/Cloud-Native-Security/website 
 ```
 
 Pass a --tag argument with a valid tag on the remote repository provided:
 ```
 trivy repo --tag <tag-name> <repo-name>
-trivy repo --tag v0.0.6 https://github.com/Aristat/golang-example-app
+trivy repo --tag 0.0.1 https://github.com/Cloud-Native-Security/website 
 ```
+
+### Trivy fs scanning
+
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/target/filesystem/)
+
+```
+git clone git@github.com:Cloud-Native-Security/website.git
+trivy fs website
+```
+
+`trivy repo` will scan both configuration files and source code; `trivy fs` will scan solely your source code.
+
 
 ### Vulnerability Scans
 
@@ -67,12 +73,6 @@ Scan any GH repository for vulnerabilities:
 trivy repo --vuln-type library https://github.com/raesene/sycamore
 ```
 
-Scan any filesystem for vulnerabilities:
-```
-git clone https://github.com/raesene/sycamore
-trivy fs ./sycamore/
-```
-
 ### Misconfiguration Scans
 
 [**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/misconfiguration/scanning/)
@@ -92,6 +92,11 @@ Scan your Kubernetes manifests for vulnerabilities and misconfigurations:
 trivy config trivy-demo/bad_iac/kubernetes
 ```
 
+You can use the same flags from the other Trivy scans also into misconfiguration scanning to filter results:
+```
+trivy config --severity HIGH trivy-demo/bad_iac/kubernetes
+```
+
 Scan your Terraform for vulnerabilities and misconfigurations:
 ```
 trivy config trivy-demo/bad_iac/terraform
@@ -107,7 +112,7 @@ Note that if Rego is not your cup of tea and you are focusing on Terraform scans
 
 The following file provides a custom polocy that compares a Kubernetes deployment and a Kubernetes service. It then scans them to see whether they have the same selectors applied:
 ```
-cat custom-policies/combine-yaml.rego
+cat custom-policies/combine/combine-yaml.rego
 ```
 
 The following command will run the scan:
@@ -222,7 +227,7 @@ kubectl get all -n trivy-system
 
 Now, we can install a deployment. If you do not have a deployment within your cluster, you can use our example application:
 ```
-kubectl apply -f manifests 
+kubectl apply -f kubernetes-manifests 
 ```
 
 Trivy will then automatically scan new deployments:
@@ -293,7 +298,33 @@ Following the example again:
 cosign attest --key /path/to/cosign.pub --type spdx --predicate sbom.spdx <IMAGE> 
 ```
 
-
 ## Ignore Values
 
+Works:
+```
 trivy fs --security-checks config --ignore-policy ./custom-policies/ignore/basic-two.rego ./bad_iac
+```
+
+Does not work
+```
+trivy config --ignore-policy ./custom-policies/ignore/basic-two.rego ./bad_iac
+```
+
+## Terraform Plan and Scan Plan File
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/kubernetes/cli/scanning/)
+
+```bash
+cd bad_iac/terraform
+```
+
+```bash
+terraform init
+
+terraform plan --out tfplan.binary
+
+terraform show -json tfplan.binary > tfplan.json
+```
+
+```bash
+trivy config ./demo.plan
+```
