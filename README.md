@@ -8,7 +8,11 @@ This repository provides several examples, showcasing Trivy. Trivy is an open so
 - Slack Channel: https://slack.aquasec.com
 
 ### Presentations
-- You can find the presentation for this repository here:
+- You can find the presentation for this repository here: https://aquasecurity-my.sharepoint.com/:p:/g/personal/anais_urlichs_aquasec_com/EdDjDXQ5-tNDrLm7AHpd_lEBkWjCsMzxcaoDmYZRtljCmg?e=UUAjgq
+
+## Prerequisites
+* WSL, Linux or Mac based Operating System
+* Use https://killercoda.com/ and their Ubuntu Playground environment
 
 ## Trivy CLI
 
