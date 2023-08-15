@@ -106,6 +106,17 @@ Scan your Terraform for vulnerabilities and misconfigurations:
 trivy config trivy-demo/bad_iac/terraform
 ```
 
+### Kustomize YAML misconfiguration scanning
+
+While you can scan a Kustomize directory directly with Trivy, the scan output will not be as accurate than if you build the Kustomize deployment first.
+
+For example,
+```
+kustomize build ./kustomize -o test.yaml
+
+trivy config test.yaml
+```
+
 ### Custom Policies
 
 [**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/misconfiguration/custom/)
