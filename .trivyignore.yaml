@@ -1,0 +1,8 @@
+vulnerabilities:
+ - id: "CVE-2021-31879"
+misconfigurations:
+ - id: "AVD-KSV-0021"
+ - id: "AVD-DIG-0005"
+   paths:
+   - terraform/cluster.tf
+   statement: Surge upgrades are disabled in your Kubernetes cluster
