@@ -6,3 +6,4 @@ misconfigurations:
    paths:
    - terraform/cluster.tf
    statement: Surge upgrades are disabled in your Kubernetes cluster
+   expired_at: 2023-09-01
