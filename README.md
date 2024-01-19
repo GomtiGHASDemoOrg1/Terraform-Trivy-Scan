@@ -2,6 +2,12 @@
 
 This repository provides several examples, showcasing Trivy. Trivy is an open source security scanner.
 
+You can find the introduction slides to Trivy here: [intro-slides](./intro-slides)
+
+### Table of Content
+
+
+
 ### Resources
 - GitHub repository: https://github.com/aquasecurity/trivy
 - Documentation: https://aquasecurity.github.io/trivy/latest/
@@ -12,7 +18,7 @@ This repository provides several examples, showcasing Trivy. Trivy is an open so
 
 ## Prerequisites
 * WSL, Linux or Mac based Operating System
-* Use https://killercoda.com/ and their Ubuntu Playground environment
+* Alternatively, use https://killercoda.com/ and their Ubuntu Playground environment
 
 ## Trivy CLI
 
@@ -41,6 +47,11 @@ trivy repo --tag <tag-name> <repo-name>
 trivy repo --tag 0.0.1 https://github.com/Cloud-Native-Security/website 
 ```
 
+Scan any GH repository for vulnerabilities:
+```
+trivy repo --vuln-type library https://github.com/Cloud-Native-Security/website
+```
+
 ### Trivy fs scanning
 
 [**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/target/filesystem/)
@@ -59,80 +70,117 @@ trivy fs website
 
 Scan a container image for vulnerabilities:
 ```
-trivy i ubuntu:20.04
+trivy i anaisurlichs/cns-trivy-demo:0.1
 ```
 
 Scan a container image for vulnerabilities but ignore all vulnerabilities that do not have a fix available:
 ```
-trivy i --ignore-unfixed ubuntu:20.04
+trivy i --ignore-unfixed anaisurlichs/cns-trivy-demo:0.1
 ```
+
+**Note**
+`--ignore-unfixed` relates to the [status of the vulnerabilities.](https://aquasecurity.github.io/trivy/v0.48/docs/configuration/filtering/#by-status)
 
 Scan a container image for vulnerabilities but filter for HIGH and CRITICAL vulnerabilities
 ```
 trivy image --severity HIGH,CRITICAL --vuln-type os postgres:10.6
 ```
 
-Scan any GH repository for vulnerabilities:
+As part of this scan, notice that Trivy also detects exposed Secrets in your Scan Targets:
 ```
-trivy repo --vuln-type library https://github.com/raesene/sycamore
+/etc/ssl/private/ssl-cert-snakeoil.key (secrets)
+
+Total: 1 (HIGH: 1, CRITICAL: 0)
+
+HIGH: AsymmetricPrivateKey (private-key)
+```
+
+#### Trivy detects Misconfiguration on the container image
+
+```
+trivy image --image-config-scanners misconfig anaisurlichs/cns-trivy-demo:0.1
 ```
 
 ### Misconfiguration Scans
 
 [**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/misconfiguration/scanning/)
+This section assumes that you are in the `trivy-demo/` repository. Otherwise, clone the repository and move into the repository:
+```
+git clone git@github.com:Cloud-Native-Security/trivy-demo.git
+cd trivy-demo/
+```
 
 Scan all of your infrastructure configuration for vulnerabilities:
 ```
-ls trivy-demo/bad_iac
+ls bad_iac
 ```
 
 Scan your Dockerfile for vulnerabilities and misconfigurations:
 ```
-trivy config trivy-demo/bad_iac/docker/
+trivy config website/Dockerfile
 ```
 
 Scan your Kubernetes manifests for vulnerabilities and misconfigurations:
 ```
-trivy config trivy-demo/bad_iac/kubernetes
+trivy config kubernetes-manifests
 ```
 
 You can use the same flags from the other Trivy scans also into misconfiguration scanning to filter results:
 ```
-trivy config --severity HIGH trivy-demo/bad_iac/kubernetes
+trivy config --severity HIGH kubernetes-manifests
 ```
 
 Scan your Terraform for vulnerabilities and misconfigurations:
 ```
-trivy config trivy-demo/bad_iac/terraform
+trivy config bad_iac/terraform
+```
+
+Scan your CloudFormation resource for security issues:
+```
+trivy config CloudFormation
 ```
 
 ### Kustomize YAML misconfiguration scanning
 
 While you can scan a Kustomize directory directly with Trivy, the scan output will not be as accurate than if you build the Kustomize deployment first.
+```
+trivy config ./kustomize
+```
 
-For example,
+Or build the kustomize first:
 ```
 kustomize build ./kustomize -o test.yaml
 
 trivy config test.yaml
 ```
 
-### Custom Policies
+### Scan a binary
+
+The trivy binary is included in this repository:
+
+```
+./kubectl-neat --help
+```
+
+We can use Trivy to scan Trivy:
+```
+trivy rootfs ./kubectl-neat
+```
+
+### Custom Policies with Rego
 
 [**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/misconfiguration/custom/)
 
 Trivy makes it possible to scan custom policies defined in Rego.
 
-Note that if Rego is not your cup of tea and you are focusing on Terraform scans, you can specify custom policies in JSON and YAML format in tfsec.
-
-The following file provides a custom polocy that compares a Kubernetes deployment and a Kubernetes service. It then scans them to see whether they have the same selectors applied:
+The following file provides a custom policy that compares a Kubernetes deployment and a Kubernetes service. It then scans them to see whether they have the same selectors applied:
 ```
-cat custom-policies/combine/combine-yaml.rego
+cat custom-policies/combine-yaml.rego
 ```
 
 The following command will run the scan:
 ```
-trivy conf --severity CRITICAL --policy ./custom-policies/combine-yaml.rego --namespaces user ./manifests
+trivy conf --severity CRITICAL --policy ./custom-policies/combine-yaml.rego --namespaces user ./kubernetes-manifests
 ```
 
 ### Trivy Cloud | Trivy AWS
@@ -190,7 +238,12 @@ trivy aws --region us-east-1 --service s3 --service ec2
 
 ### Scan your connected Kubernetes cluster
 
-[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/kubernetes/cli/scanning/)
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/target/kubernetes/)
+
+If you don't have access to a Kubernetes cluster, quickly spin up a [KinD cluster:](https://kind.sigs.k8s.io/)
+```
+kind create cluster --name trivy-demo
+```
 
 The Trivy Kubernetes command scans any connected Kubernetes cluster for vulnerabilities, misconfigurations, exposed secrets and more.
 
@@ -200,14 +253,24 @@ To scan your entire cluster and receive a summary report use the following comma
 trivy k8s --report summary cluster
 ```
 
+Note that this command my take some time to run, depending on your cluster size. What you could do to speed up the scanning is to only check for misconfiguration:
+```
+trivy k8s --report summary --scanners misconf cluster
+```
+
+Or to only check for vulnerabilities:
+```
+trivy k8s --report summary --scanners vuln cluster
+```
+
 To scan a specific namespace in your cluster and receive a summary report use the following command:
 ```
-trivy k8s --n kube-system --report summary cluster
+trivy k8s --namespace kube-system --report summary cluster
 ```
 
 To receive a detailed report, you can use the `--report=all` flag. However, we would advice to only do that on specific namespaces or resources since you will be provided with a lot of detailed information:
 ```
-trivy k8s --n kube-system --report all cluster
+trivy k8s --namespace kube-system --report all cluster
 ```
 
 Similar to vulnerabilities, we can also filter in-cluster for specific vulnerabilty types:
@@ -215,13 +278,16 @@ Similar to vulnerabilities, we can also filter in-cluster for specific vulnerabi
 trivy k8s --severity=CRITICAL --report all cluster
 ```
 
-With the trivy K8s command, you can also scan specific workloads that are running within your cluster:
+With the trivy K8s command, you can also scan specific workloads that are running within your cluster.
+
+First install the workload:
 ```
-trivy k8s -–n default --report summary cluster deployments/react-application
+kubectl apply -f kubernetes-manifests
 ```
-or
+
+And then scan it for security issues:
 ```
-trivy k8s –-n app --report summary cluster deployments/react-application
+trivy k8s --report=summary --namespace default deploy react-application
 ```
 
 ## Trivy Operator
@@ -247,7 +313,12 @@ kubectl apply -f kubernetes-manifests
 
 Trivy will then automatically scan new deployments:
 ```
-kubectl get Vulnerabilityreports
+kubectl get vulnerabilityreports --all-namespaces -o wide
+```
+
+Inspect created ConfigAuditReports by:
+```
+kubectl get configauditreports --all-namespaces -o wide
 ```
 
 To get detailed information on the vulnerabilities, describe the Vulnerabilityreports:
@@ -264,7 +335,7 @@ The Trivy Config allows us to define the configurations for our security scans i
 You can then use the config manifest in your security scans such as your image vulnerability scans:
 
 ```
-trivy image --severity HIGH node:14
+trivy image --config ./trivy-config/default.yaml node:14
 ```
 
 ## Trivy SBOM & Attestation
@@ -305,24 +376,24 @@ cosign attest --key ./cosign.key --type spdx --predicate sbom.spdx anaisurlichs/
 
 Verify the attestation with your public key:
 ```
-cosign attest --key /path/to/cosign.pub --type spdx --predicate sbom.spdx <IMAGE> 
+cosign verify-attestation --key /path/to/cosign.pub --type spdx <IMAGE> 
 ```
 
 Following the example again:
 ```
-cosign attest --key /path/to/cosign.pub --type spdx --predicate sbom.spdx <IMAGE> 
+cosign verify-attestation --key cosign.pub --type spdx anaisurlichs/cns-website:0.0.6
 ```
 
 ## Ignore Values
 
 Works:
 ```
-trivy fs --security-checks config --ignore-policy ./custom-policies/ignore/basic-two.rego ./bad_iac
+trivy fs --security-checks config --ignore-policy ./policies/ignore/ignore.rego ./bad_iac
 ```
 
 Does not work
 ```
-trivy config --ignore-policy ./custom-policies/ignore/basic-two.rego ./bad_iac
+trivy config --ignore-policy ./policies/ignore/ignore.rego ./bad_iac
 ```
 
 ## Terraform Plan and Scan Plan File
@@ -341,5 +412,54 @@ terraform show -json tfplan.binary > tfplan.json
 ```
 
 ```bash
-trivy config ./demo.plan
+trivy config ./tfplan.json
+```
+
+## Trivy SBOM and VEX
+
+Generate the SBOM
+
+```
+trivy image --format cyclonedx --output debian11.sbom.cdx debian:11
+```
+
+Create a VEX based on the SBOM generated in step 1
+
+Provide the VEX when scanning the CycloneDX SBOM
+
+```
+trivy sbom --vex vex/trivy.vex.cdx debian11.sbom.cdx
+```
+
+## Trivy License Scanning
+
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/scanner/license/)
+
+Scan the licenses used in a container image:
+```
+trivy image --scanners license --severity UNKNOWN,HIGH,CRITICAL alpine:3.15
+```
+
+Full license scanning:
+```
+trivy image --scanners license --severity UNKNOWN,HIGH,CRITICAL --license-full grafana/grafana
+```
+
+### Ignore specific licenses
+
+Ignore a specific license through the CLI:
+```
+trivy image --scanners license --ignored-licenses MPL-2.0,MIT --severity HIGH grafana/grafana:latest
+```
+
+Or through the trivy.yaml manifest:
+```
+trivy image --scanners license --config trivy-config/license.yaml grafana/grafana:latest
+```
+
+### Filter licenses
+
+Some fancy jq command:
+```
+trivy fs . --scanners license --license-full --format json | jq '[.Results[] | .Licenses//empty | .[]] | group_by(.Name) | .[] |{"license":.[1].Name, "findings":map(if .PkgName=="" then .FilePath else .PkgName end)}'
 ```

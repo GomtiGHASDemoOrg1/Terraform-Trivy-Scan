@@ -1,0 +1,21 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "vulnerabilities": [
+    {
+      "id": "CVE-2023-50495",
+      "analysis": {
+        "state": "not_affected",
+        "justification": "code_not_reachable",
+        "response": ["will_not_fix", "update"],
+        "detail": "The vulnerable function is not called"
+      },
+      "affects": [
+        {
+          "ref": "urn:uuid:512719a9-a831-4245-a05e-625ee5e085f5/1#pkg:deb/debian/libtinfo6"
+        }
+      ]
+    }
+  ]
+}
