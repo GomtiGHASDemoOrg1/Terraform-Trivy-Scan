@@ -4,10 +4,6 @@ This repository provides several examples, showcasing Trivy. Trivy is an open so
 
 You can find the introduction slides to Trivy here: [intro-slides](./intro-slides)
 
-### Table of Content
-
-
-
 ### Resources
 - GitHub repository: https://github.com/aquasecurity/trivy
 - Documentation: https://aquasecurity.github.io/trivy/latest/
@@ -288,6 +284,26 @@ kubectl apply -f kubernetes-manifests
 And then scan it for security issues:
 ```
 trivy k8s --report=summary --namespace default deploy react-application
+```
+
+### KBOM 
+
+[**Documentation**](https://aquasecurity.github.io/trivy/latest/docs/target/kubernetes/#kbom)
+
+Generate the KBOM:
+```
+trivy k8s cluster --format cyclonedx --output mykbom.cdx.json
+```
+
+Scan the KBOM for security issues:
+```
+trivy sbom mykbom.cdx.json
+```
+
+Scan the Kubernetes Infrastructure directly for security issues:
+
+```
+trivy k8s cluster --scanners vuln  --report summary
 ```
 
 ## Trivy Operator
