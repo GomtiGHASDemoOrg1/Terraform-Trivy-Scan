@@ -6,3 +6,5 @@ misconfigurations:
    paths:
    - terraform/cluster.tf
    statement: Surge upgrades are disabled in your Kubernetes cluster
+licenses:
+ - id: GPL-2.0
